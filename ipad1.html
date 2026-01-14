@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>iPad 1 - Energy Control</title>
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+<style>
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background: radial-gradient(circle at center,#001f2a,#000915);
+  font-family: 'Orbitron', sans-serif;
+  color:white;
+
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+/* ===== TEXT ===== */
+.title{
+  font-size:clamp(26px,4vw,40px);
+  color:#7affff;
+  text-shadow:0 0 25px cyan;
+}
+
+.deviceTag{
+  margin-top:10px;
+  font-size:clamp(20px,3vw,30px);
+  color:#00ffa9;
+  text-shadow:0 0 20px #00ffc4;
+}
+
+/* ===== BIG BUTTON ===== */
+.button{
+  margin-top:6vh;
+  width:clamp(220px,35vw,350px);
+  height:clamp(220px,35vw,350px);
+  border-radius:50%;
+  background:radial-gradient(circle,#00fff2,#0099ff);
+  box-shadow:
+      0 0 45px #00eaff,
+      0 0 85px #00eaff inset;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:clamp(22px,3vw,32px);
+  color:#002b33;
+  user-select:none;
+  touch-action:none;
+  transition:0.2s;
+}
+
+.button:active{
+  transform:scale(1.08);
+  box-shadow:
+      0 0 65px #00eaff,
+      0 0 120px #00eaff inset;
+}
+
+#show{
+  margin-top:25px;
+  font-size:clamp(22px,3vw,32px);
+}
+</style>
+</head>
+
+<body>
+
+<div class="title">Energy Control</div>
+<div class="deviceTag">Device: iPad 1</div>
+
+<div id="btn" class="button">
+TOUCH & HOLD
+</div>
+
+<div id="show">0%</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from 
+"https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBTOt6tH9HaF5c6ZSSXpOqMTADlt42cJx0",
+  authDomain: "sie-2026.firebaseapp.com",
+  databaseURL: "https://sie-2026-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "sie-2026",
+  storageBucket: "sie-2026.firebasestorage.app",
+  messagingSenderId: "643250592890",
+  appId: "1:643250592890:web:6c937075cb1183e714efc3"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let value = 0;
+let hold = null;
+
+// ================= READ FROM DATABASE =================
+const path = ref(db,"buttons/ipad1");
+
+onValue(path, snap=>{
+  let v = snap.val() || 0;
+  value = v;
+  document.getElementById("show").innerText = value + "%";
+});
+
+// ================= WRITE TO DATABASE =================
+function update(){
+  set(path, value);
+}
+
+// เพิ่มแบบ Smooth
+function startIncrease(){
+  if(hold) return;
+  hold = setInterval(()=>{
+    if(value < 100){
+      value += 1;
+      update();
+    }
+  },55);
+}
+
+function stopIncrease(){
+  clearInterval(hold);
+  hold = null;
+}
+
+const btn = document.getElementById("btn");
+
+// Touch (iPad)
+btn.addEventListener("touchstart", e=>{
+  e.preventDefault();
+  startIncrease();
+},{passive:false});
+
+btn.addEventListener("touchend", stopIncrease);
+btn.addEventListener("touchcancel", stopIncrease);
+
+// Mouse (เผื่อทดสอบบนคอม)
+btn.onmousedown = startIncrease;
+document.onmouseup = stopIncrease;
+
+</script>
+</body>
+</html>

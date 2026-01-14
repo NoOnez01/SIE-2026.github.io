@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SIE 2026 Energy Ceremony</title>
+
+<style>
+body{
+  margin:0;
+  background: radial-gradient(circle at center,#03242b,#00111c);
+  overflow:hidden;
+  font-family: 'Orbitron', sans-serif;
+  color:white;
+}
+
+.header{
+  text-align:center;
+  padding-top:20px;
+  font-size:40px;
+  letter-spacing:3px;
+  color:#6ffcff;
+  text-shadow:0 0 30px #00ffc8;
+}
+
+.wrapper{
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  height:80vh;
+}
+
+.tube{
+  width:180px;
+  height:560px;
+  border-radius:100px;
+  border:5px solid rgba(0,255,255,.9);
+  box-shadow:
+    0 0 40px rgba(0,255,255,.8),
+    inset 0 0 50px rgba(0,255,255,.5);
+  position:relative;
+  overflow:hidden;
+}
+
+.fill{
+  position:absolute;
+  bottom:0;
+  width:100%;
+  height:0%;
+  background:linear-gradient(#00fff2,#00ffa5);
+  box-shadow:0 0 70px #00ffd9;
+  transition:height .3s ease-out;
+}
+
+.label{
+  margin-top:25px;
+  font-size:30px;
+  text-align:center;
+  color:#9ffcff;
+  text-shadow:0 0 20px #00fff2;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">Symposium & Innovation Exhibition 2026</div>
+
+<div class="wrapper">
+
+  <div>
+    <div class="tube">
+      <div id="ipad1" class="fill"></div>
+    </div>
+    <div class="label" id="p1Text">0%</div>
+  </div>
+
+  <div>
+    <div class="tube">
+      <div id="ipad2" class="fill"></div>
+    </div>
+    <div class="label" id="p2Text">0%</div>
+  </div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getDatabase, ref, onValue } from 
+"https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBTOt6tH9HaF5c6ZSSXpOqMTADlt42cJx0",
+  authDomain: "sie-2026.firebaseapp.com",
+  databaseURL: "https://sie-2026-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "sie-2026",
+  storageBucket: "sie-2026.firebasestorage.app",
+  messagingSenderId: "643250592890",
+  appId: "1:643250592890:web:6c937075cb1183e714efc3"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let p1 = 0;
+let p2 = 0;
+
+function bind(path,id,textId,is1){
+  onValue(ref(db,path),(snap)=>{
+    let val = snap.val() || 0;
+    document.getElementById(id).style.height = val+"%";
+    document.getElementById(textId).innerText = val+"%";
+
+    if(is1) p1 = val; else p2 = val;
+
+    checkOBS();
+  });
+}
+
+bind("buttons/ipad1","ipad1","p1Text",true);
+bind("buttons/ipad2","ipad2","p2Text",false);
+
+// ================= OBS AUTO SCENE SWITCH =================
+async function checkOBS(){
+  if(p1 >= 100 && p2 >= 100){
+    try{
+      await fetch("http://127.0.0.1:5000/scene",{
+        method:"POST"
+      });
+      console.log("Scene switched");
+    }catch(e){
+      console.log("OBS not connected");
+    }
+  }
+}
+</script>
+</body>
+</html>
